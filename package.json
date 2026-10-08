@@ -1,11 +1,11 @@
 {
-  "name": "ribbitor-proj",
+  "name": "pfa-node-proj",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "vitest --run",
-    "dev": "npx tsc && node dist/index.js",
-    "start": "node dist/index.js",
+    "dev": "npx tsc && node dist/server.js",
+    "start": "node dist/server.js",
     "build": "npx tsc"
   },
   "keywords": [],
