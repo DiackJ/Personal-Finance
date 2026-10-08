@@ -1,5 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 import { config } from "./src/config/apiConfig.js";
+import "dotenv";
 
 export default defineConfig({
     dialect: 'postgresql',

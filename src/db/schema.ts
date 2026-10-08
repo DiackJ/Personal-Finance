@@ -2,7 +2,7 @@ import { uuid, varchar, text, timestamp, date, bigint, real, boolean, serial, pg
 //import { InferInsertModel } from "drizzle-kit";
 
 // enum values
-const categoryEnum = pgEnum('category', [
+export const categoryEnum = pgEnum('category', [
     'Entertainment',
     'Bills',
     'Groceries',
@@ -15,7 +15,7 @@ const categoryEnum = pgEnum('category', [
     'General'
 ]);
 
-const themeColorsEnum = pgEnum('theme_colors', [
+export const themeColorsEnum = pgEnum('theme_colors', [
     'Green',
     'Yellow',
     'Cyan',
@@ -34,7 +34,7 @@ const themeColorsEnum = pgEnum('theme_colors', [
     'Gold'
 ]);
 
-const billTypeEnum = pgEnum('bill_type', [
+export const billTypeEnum = pgEnum('bill_type', [
     'Housing',
     'Electricity',
     'Water/Sewer',
@@ -46,12 +46,12 @@ const billTypeEnum = pgEnum('bill_type', [
     'Other'
 ]);
 
-const billingPeriodEnum = pgEnum('billing_period', [
+export const billingPeriodEnum = pgEnum('billing_period', [
     'Monthly',
     'Yearly'
 ]);
 
-const budgetTypeEnum = pgEnum('budget_type', [
+export const budgetTypeEnum = pgEnum('budget_type', [
     'Weekly',
     'Monthly',
     'Yearly'
@@ -71,6 +71,7 @@ export const users = pgTable("users", {
 export const savings = pgTable("savings", {
     id: serial().primaryKey().notNull(),
     user_id: uuid().notNull(),
+    theme_color_id: serial().notNull(),
     title: text().notNull(),
     target: bigint({ mode: "number" }),
     total_saved: bigint({ mode: "number" }),
@@ -81,7 +82,7 @@ export const transactions = pgTable("transactions", {
     id: serial().primaryKey().notNull(),
     user_id: uuid().notNull(),
     recipient_sender: text().notNull(),
-    category: categoryEnum(),
+    category: categoryEnum("category"),
     income: boolean(),
     expense: boolean(),
     amount: bigint({ mode: "number" }),
@@ -97,14 +98,14 @@ export const budgets = pgTable("budgets", {
     spent: bigint({ mode: "number" }).default(0),
     remaining: bigint({ mode: "number"}),
     budget_start_date: date().notNull(),
-    budget_type: budgetTypeEnum().notNull()
+    budget_type: budgetTypeEnum("budget_type").notNull()
 });
 
 export const bills = pgTable("bills", {
     id: serial().primaryKey().notNull(),
     user_id: uuid().notNull(),
     recipient: text().notNull(),
-    bill_type: billTypeEnum().notNull(),
+    bill_type: billTypeEnum("bill_type").notNull(),
     amount_due: bigint({ mode: "number" }),
     billing_period: billingPeriodEnum().notNull(),
     is_paid: boolean().default(false),
@@ -113,17 +114,17 @@ export const bills = pgTable("bills", {
 
 // table to limit colors from being reused for savings container or budgets
 // ex: prevent user from having two savings containers with a theme color of purple
-export const themeColors = pgTable("theme", {
+export const themeColors = pgTable("themes", {
     id: serial().notNull(),
-    theme_color: themeColorsEnum().notNull(),
+    theme_color: themeColorsEnum("theme_color").notNull(),
     in_used_savings: boolean().default(false),
     in_use_budget: boolean().default(false)
 });
 
 // table to limit categories from being reused for budgets 
 // ex: prevent user from having two grocery budgets 
-export const categories = pgTable("category", {
+export const categories = pgTable("categories", {
     id: serial().notNull(),
-    category: categoryEnum().notNull(),
+    category: categoryEnum("category").notNull(),
     in_use: boolean().default(false)
 });
