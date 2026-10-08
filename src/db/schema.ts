@@ -1,4 +1,4 @@
-import { uuid, varchar, text, timestamp, date, bigint, real, boolean, serial, pgTable, pgEnum } from "drizzle-orm/pg-core";
+import { uuid, varchar, text, timestamp, date, bigint, real, boolean, serial, integer, pgTable, pgEnum } from "drizzle-orm/pg-core";
 //import { InferInsertModel } from "drizzle-kit";
 
 // enum values
@@ -59,10 +59,10 @@ export const budgetTypeEnum = pgEnum('budget_type', [
 
 // database schema tables
 export const users = pgTable("users", {
-    id: uuid().primaryKey().notNull(),
-    email: varchar({ length: 256 }).notNull(),
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    email: varchar({ length: 256 }).notNull().unique(),
     password: text().notNull(),
-    created_at: timestamp({ withTimezone: true }).defaultNow(),
+    created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
     current_balance: bigint({ mode: "number" }),
     expense_total: bigint({ mode: "number" }),
     avg_monthly_income: bigint({ mode: "number" })
@@ -70,8 +70,8 @@ export const users = pgTable("users", {
 
 export const savings = pgTable("savings", {
     id: serial().primaryKey().notNull(),
-    user_id: uuid().notNull(),
-    theme_color_id: serial().notNull(),
+    user_id: uuid().notNull().references(() => users.id, {onDelete: "cascade"}),
+    theme_color_id: integer().notNull().references(() => themeColors.id, {onDelete: "cascade"}),
     title: text().notNull(),
     target: bigint({ mode: "number" }),
     total_saved: bigint({ mode: "number" }),
@@ -80,7 +80,7 @@ export const savings = pgTable("savings", {
 
 export const transactions = pgTable("transactions", {
     id: serial().primaryKey().notNull(),
-    user_id: uuid().notNull(),
+    user_id: uuid().notNull().references(() => users.id, {onDelete: "cascade"}),
     recipient_sender: text().notNull(),
     category: categoryEnum("category"),
     income: boolean(),
@@ -91,9 +91,9 @@ export const transactions = pgTable("transactions", {
 
 export const budgets = pgTable("budgets", {
     id: serial().primaryKey().notNull(),
-    user_id: uuid().notNull(),
-    category_id: serial().notNull(),
-    theme_color_id: serial().notNull(),
+    user_id: uuid().notNull().references(() => users.id, {onDelete: "cascade"}),
+    category_id: integer().notNull().references(() => categories.id, {onDelete: "cascade"}),
+    theme_color_id: integer().notNull().references(() => themeColors.id, {onDelete: "cascade"}),
     maximum: bigint({ mode: "number" }),
     spent: bigint({ mode: "number" }).default(0),
     remaining: bigint({ mode: "number"}),
@@ -103,7 +103,7 @@ export const budgets = pgTable("budgets", {
 
 export const bills = pgTable("bills", {
     id: serial().primaryKey().notNull(),
-    user_id: uuid().notNull(),
+    user_id: uuid().notNull().references(() => users.id, {onDelete: "cascade"}),
     recipient: text().notNull(),
     bill_type: billTypeEnum("bill_type").notNull(),
     amount_due: bigint({ mode: "number" }),
@@ -115,7 +115,7 @@ export const bills = pgTable("bills", {
 // table to limit colors from being reused for savings container or budgets
 // ex: prevent user from having two savings containers with a theme color of purple
 export const themeColors = pgTable("themes", {
-    id: serial().notNull(),
+    id: serial().primaryKey().notNull(),
     theme_color: themeColorsEnum("theme_color").notNull(),
     in_used_savings: boolean().default(false),
     in_use_budget: boolean().default(false)
@@ -124,7 +124,17 @@ export const themeColors = pgTable("themes", {
 // table to limit categories from being reused for budgets 
 // ex: prevent user from having two grocery budgets 
 export const categories = pgTable("categories", {
-    id: serial().notNull(),
+    id: serial().primaryKey().notNull(),
     category: categoryEnum("category").notNull(),
     in_use: boolean().default(false)
+});
+
+// refresh token table 
+export const refreshTokens = pgTable("refresh_tokens", {
+    id: uuid().defaultRandom().primaryKey(),
+    user_id: uuid().notNull().references(() => users.id, {onDelete: "cascade"}),
+    token_hash: text().notNull().unique(),
+    expires_at: timestamp("expires_at", {withTimezone: true}).notNull(),
+    revoked_at: timestamp("revoked_at", {withTimezone: true}),
+    created_at: timestamp("created_at", {withTimezone: true}).defaultNow().notNull()
 });
